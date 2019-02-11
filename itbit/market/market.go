@@ -1,4 +1,4 @@
-package itbit
+package market
 
 import (
 	"encoding/json"
@@ -7,23 +7,26 @@ import (
 	"net/http"
 )
 
-const MarketDataEndpoint = ItBitEndpoint + "/markets/"
-
-type MarketDataService struct {
+type Service struct {
 	httpClient *http.Client
+	endpoint   string
 }
 
-func newMarketDataService(client *http.Client) *MarketDataService {
-	return &MarketDataService{client}
+// NewService returns a pointer to a Service.
+func NewService(c *http.Client, baseEndpoint string) *Service {
+	return &Service{
+		httpClient: c,
+		endpoint:   baseEndpoint + "/markets/",
+	}
 }
 
 // GetTicker returns TickerInfo for the specified market.
-func (s *MarketDataService) GetTicker(tickerSymbol string) (TickerInfo, *http.Response, error) {
+func (s *Service) GetTicker(tickerSymbol string) (TickerInfo, *http.Response, error) {
 	var tickerInfo TickerInfo
 	if tickerSymbol == "" {
 		return tickerInfo, nil, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := MarketDataEndpoint + tickerSymbol + "/ticker"
+	URL := s.endpoint + tickerSymbol + "/ticker"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return tickerInfo, nil, err
@@ -45,12 +48,12 @@ func (s *MarketDataService) GetTicker(tickerSymbol string) (TickerInfo, *http.Re
 }
 
 // GetOrderBook returns the full order book for the specified market.
-func (s *MarketDataService) GetOrderBook(tickerSymbol string) (OrderBook, *http.Response, error) {
+func (s *Service) GetOrderBook(tickerSymbol string) (OrderBook, *http.Response, error) {
 	var orderBook OrderBook
 	if tickerSymbol == "" {
 		return orderBook, nil, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := MarketDataEndpoint + tickerSymbol + "/order_book"
+	URL := s.endpoint + tickerSymbol + "/order_book"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return orderBook, nil, err
@@ -71,15 +74,15 @@ func (s *MarketDataService) GetOrderBook(tickerSymbol string) (OrderBook, *http.
 	return orderBook, resp, nil
 }
 
-// MarketDataService returns recent trades for the specified market
+// Service returns recent trades for the specified market
 //
 // since is an optional parameter
-func (s *MarketDataService) GetRecentTrades(tickerSymbol, since string) (RecentTradesResponse, *http.Response, error) {
+func (s *Service) GetRecentTrades(tickerSymbol, since string) (RecentTradesResponse, *http.Response, error) {
 	var recentTrades RecentTradesResponse
 	if tickerSymbol == "" {
 		return recentTrades, nil, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
 	}
-	URL := MarketDataEndpoint + tickerSymbol + "/trades"
+	URL := s.endpoint + tickerSymbol + "/trades"
 	if since != "" {
 		URL = fmt.Sprintf("%s?since=%s", URL, since)
 	}

@@ -16,7 +16,7 @@ var (
 func main() {
 	for {
 		<-ticker.C
-		t, resp, err := client.MarketData.GetTicker(itbit.BitcoinUSDollar)
+		t, resp, err := client.MarketService.GetTicker(itbit.BitcoinUSDollar)
 		if err != nil {
 			log.Panic(err)
 		}
