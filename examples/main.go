@@ -2,22 +2,25 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/juliansniff/go-itbit/itbit"
 )
 
+var (
+	ticker = time.NewTicker(5 * time.Second)
+	client = itbit.NewClient()
+)
+
 func main() {
-	client := itbit.NewClient()
-	resp, err := client.MarketData.GetTicker(itbit.BitcoinUSDollar)
-	if err != nil {
-		log.Panic(err)
+	for {
+		<-ticker.C
+		t, resp, err := client.MarketData.GetTicker(itbit.BitcoinUSDollar)
+		if err != nil {
+			log.Panic(err)
+		}
+		fmt.Println(resp.Status)
+		fmt.Printf("LastPrice: %10f\n", t.LastPrice)
 	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Panic(err)
-	}
-	fmt.Printf("%s\n", string(b))
 }

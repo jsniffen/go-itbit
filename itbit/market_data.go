@@ -1,7 +1,9 @@
 package itbit
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -15,38 +17,67 @@ func newMarketDataService(client *http.Client) *MarketDataService {
 	return &MarketDataService{client}
 }
 
-// GetTicker returns ticker info for the specified market.
-func (s *MarketDataService) GetTicker(tickerSymbol string) (*http.Response, error) {
+// GetTicker returns TickerInfo for the specified market.
+func (s *MarketDataService) GetTicker(tickerSymbol string) (TickerInfo, *http.Response, error) {
+	var tickerInfo TickerInfo
 	if tickerSymbol == "" {
-		return nil, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
+		return tickerInfo, nil, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
 	URL := MarketDataEndpoint + tickerSymbol + "/ticker"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
-		return nil, err
+		return tickerInfo, nil, err
 	}
-	return s.httpClient.Do(req)
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return tickerInfo, resp, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return tickerInfo, resp, err
+	}
+	err = json.Unmarshal(b, &tickerInfo)
+	if err != nil {
+		return tickerInfo, resp, err
+	}
+	return tickerInfo, resp, nil
 }
 
 // GetOrderBook returns the full order book for the specified market.
-func (s *MarketDataService) GetOrderBook(tickerSymbol string) (*http.Response, error) {
+func (s *MarketDataService) GetOrderBook(tickerSymbol string) (OrderBook, *http.Response, error) {
+	var orderBook OrderBook
 	if tickerSymbol == "" {
-		return nil, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
+		return orderBook, nil, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
 	URL := MarketDataEndpoint + tickerSymbol + "/order_book"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
-		return nil, err
+		return orderBook, nil, err
 	}
-	return s.httpClient.Do(req)
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return orderBook, resp, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return orderBook, resp, err
+	}
+	err = json.Unmarshal(b, &orderBook)
+	if err != nil {
+		return orderBook, resp, err
+	}
+	return orderBook, resp, nil
 }
 
 // MarketDataService returns recent trades for the specified market
 //
 // since is an optional parameter
-func (s *MarketDataService) GetRecentTrades(tickerSymbol, since string) (*http.Response, error) {
+func (s *MarketDataService) GetRecentTrades(tickerSymbol, since string) (RecentTradesResponse, *http.Response, error) {
+	var recentTrades RecentTradesResponse
 	if tickerSymbol == "" {
-		return nil, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
+		return recentTrades, nil, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
 	}
 	URL := MarketDataEndpoint + tickerSymbol + "/trades"
 	if since != "" {
@@ -54,7 +85,20 @@ func (s *MarketDataService) GetRecentTrades(tickerSymbol, since string) (*http.R
 	}
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
-		return nil, err
+		return recentTrades, nil, err
 	}
-	return s.httpClient.Do(req)
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return recentTrades, resp, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return recentTrades, resp, err
+	}
+	err = json.Unmarshal(b, &recentTrades)
+	if err != nil {
+		return recentTrades, resp, err
+	}
+	return recentTrades, resp, nil
 }
