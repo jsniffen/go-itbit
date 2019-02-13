@@ -22,8 +22,6 @@ func (ob *OrderBook) UnmarshalJSON(b []byte) error {
 	}
 
 	asks := [][]float64{}
-	bids := [][]float64{}
-
 	for i := range StringOrderBook.Asks {
 		ask := []float64{}
 		for j := range StringOrderBook.Asks[i] {
@@ -35,6 +33,7 @@ func (ob *OrderBook) UnmarshalJSON(b []byte) error {
 		}
 		asks = append(asks, ask)
 	}
+	bids := [][]float64{}
 	for i := range StringOrderBook.Bids {
 		bid := []float64{}
 		for j := range StringOrderBook.Bids[i] {
