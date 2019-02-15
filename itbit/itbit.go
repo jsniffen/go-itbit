@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	Endpoint = "https://api.itbit.com/v1/"
-
 	Bitcoin         = "XBT"
 	Etherium        = "ETH"
 	Euro            = "EUR"
@@ -25,14 +23,14 @@ const (
 )
 
 type Client struct {
-	MarketService  *market.Service
-	TradingService *trading.Service
+	*market.MarketService
+	*trading.TradingService
 }
 
 func NewClient(key, secret string) *Client {
 	client := &http.Client{}
 	return &Client{
-		MarketService:  market.NewService(client, Endpoint),
-		TradingService: trading.NewService(client, Endpoint, key, secret),
+		market.NewMarketService(client),
+		trading.NewTradingService(client, key, secret),
 	}
 }

@@ -9,18 +9,6 @@ import (
 	"time"
 )
 
-func TestNewServiceEndpoint(t *testing.T) {
-	e := "endpoint"
-	s := NewService(&http.Client{}, e)
-
-	got := s.endpoint
-	expected := e + "/markets/"
-
-	if got != expected {
-		t.Errorf("expected: %s, got: %s", expected, got)
-	}
-}
-
 func TestGetTicker(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := `{
@@ -46,8 +34,10 @@ func TestGetTicker(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewService(&http.Client{}, ts.URL)
-	got, _, err := s.GetTicker("tickerSymbol")
+	s := NewMarketService(&http.Client{})
+	endpoint = ts.URL
+
+	got, err := s.GetTicker("tickerSymbol")
 	if err != nil {
 		t.Errorf("error making request: %v", err)
 	}
@@ -99,8 +89,10 @@ func TestGetOrderBook(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewService(&http.Client{}, ts.URL)
-	got, _, err := s.GetOrderBook("tickerSymbol")
+	s := NewMarketService(&http.Client{})
+	endpoint = ts.URL
+
+	got, err := s.GetOrderBook("tickerSymbol")
 	if err != nil {
 		t.Errorf("error making request: %v", err)
 	}
@@ -156,8 +148,10 @@ func TestGetRecentTrades(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewService(&http.Client{}, ts.URL)
-	got, _, err := s.GetRecentTrades("tickerSymbol", "")
+	s := NewMarketService(&http.Client{})
+	endpoint = ts.URL
+
+	got, err := s.GetRecentTrades("tickerSymbol", "")
 	if err != nil {
 		t.Errorf("error making request: %v", err)
 	}

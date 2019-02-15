@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type Service struct {
+type TradingService struct {
 	httpClient *http.Client
 	endpoint   string
 	key        string
@@ -21,7 +21,8 @@ type Service struct {
 }
 
 var (
-	epoch = func() int64 {
+	endpoint = "https://api.itbit.com/v1/wallets"
+	epoch    = func() int64 {
 		return time.Now().UnixNano() / 1000000
 	}
 	nonce = func() int64 {
@@ -29,24 +30,23 @@ var (
 	}
 )
 
-// NewService returns a pointer to a Trading Service.
-func NewService(c *http.Client, baseEndpoint, key, secret string) *Service {
-	return &Service{
+// NewTradingService returns a pointer to a Trading TradingService.
+func NewTradingService(c *http.Client, key, secret string) *TradingService {
+	return &TradingService{
 		httpClient: c,
-		endpoint:   baseEndpoint + "wallets",
 		key:        key,
 		secret:     secret,
 	}
 }
 
-func (s *Service) GetAllWallets(userID string, page, perPage int) ([]Wallet, error) {
+func (s *TradingService) GetAllWallets(userID string, page, perPage int) ([]Wallet, error) {
 	var wallets []Wallet
 
 	if userID == "" {
 		return wallets, fmt.Errorf("userID is required, got empty string")
 	}
 
-	URL := fmt.Sprintf("%s?userId=%s", s.endpoint, userID)
+	URL := fmt.Sprintf("%s?userId=%s", endpoint, userID)
 
 	if page != 0 {
 		URL = fmt.Sprintf("%s?page=%d", URL, page)
@@ -89,7 +89,7 @@ func (s *Service) GetAllWallets(userID string, page, perPage int) ([]Wallet, err
 	return wallets, nil
 }
 
-func (s *Service) signRequest(r *http.Request) error {
+func (s *TradingService) signRequest(r *http.Request) error {
 	timestamp := strconv.FormatInt(epoch(), 10)
 	nonce := strconv.FormatInt(nonce(), 10)
 

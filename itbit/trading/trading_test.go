@@ -23,7 +23,7 @@ func mockRequest(method, URL, body string) *http.Request {
 }
 
 func TestSignRequest(t *testing.T) {
-	s := &Service{
+	s := &TradingService{
 		httpClient: &http.Client{},
 		endpoint:   "endpoint",
 		key:        "key",
