@@ -1,4 +1,4 @@
-package market
+package itbit
 
 import (
 	"fmt"
@@ -34,8 +34,8 @@ func TestGetTicker(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewMarketService(&http.Client{})
 	endpoint = ts.URL
+	s := newMarketService(&http.Client{})
 
 	got, err := s.GetTicker("tickerSymbol")
 	if err != nil {
@@ -89,8 +89,8 @@ func TestGetOrderBook(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewMarketService(&http.Client{})
 	endpoint = ts.URL
+	s := newMarketService(&http.Client{})
 
 	got, err := s.GetOrderBook("tickerSymbol")
 	if err != nil {
@@ -148,8 +148,8 @@ func TestGetRecentTrades(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	s := NewMarketService(&http.Client{})
 	endpoint = ts.URL
+	s := newMarketService(&http.Client{})
 
 	got, err := s.GetRecentTrades("tickerSymbol", "")
 	if err != nil {

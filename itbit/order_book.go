@@ -1,4 +1,4 @@
-package market
+package itbit
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package trading
+package itbit
 
 import (
 	"crypto/hmac"
@@ -15,14 +15,13 @@ import (
 
 type TradingService struct {
 	httpClient *http.Client
-	endpoint   string
 	key        string
 	secret     string
+	endpoint   string
 }
 
 var (
-	endpoint = "https://api.itbit.com/v1/wallets"
-	epoch    = func() int64 {
+	epoch = func() int64 {
 		return time.Now().UnixNano() / 1000000
 	}
 	nonce = func() int64 {
@@ -30,12 +29,12 @@ var (
 	}
 )
 
-// NewTradingService returns a pointer to a Trading TradingService.
-func NewTradingService(c *http.Client, key, secret string) *TradingService {
+func newTradingService(c *http.Client, key, secret string) *TradingService {
 	return &TradingService{
 		httpClient: c,
 		key:        key,
 		secret:     secret,
+		endpoint:   endpoint + "/wallets",
 	}
 }
 
@@ -46,7 +45,7 @@ func (s *TradingService) GetAllWallets(userID string, page, perPage int) ([]Wall
 		return wallets, fmt.Errorf("userID is required, got empty string")
 	}
 
-	URL := fmt.Sprintf("%s?userId=%s", endpoint, userID)
+	URL := fmt.Sprintf("%s?userId=%s", s.endpoint, userID)
 
 	if page != 0 {
 		URL = fmt.Sprintf("%s?page=%d", URL, page)

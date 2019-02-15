@@ -1,4 +1,4 @@
-package trading
+package itbit
 
 import (
 	"bytes"
@@ -24,10 +24,8 @@ func mockRequest(method, URL, body string) *http.Request {
 
 func TestSignRequest(t *testing.T) {
 	s := &TradingService{
-		httpClient: &http.Client{},
-		endpoint:   "endpoint",
-		key:        "key",
-		secret:     "secret",
+		key:    "key",
+		secret: "secret",
 	}
 
 	tests := map[*http.Request](map[string]string){

@@ -1,4 +1,4 @@
-package market
+package itbit
 
 import (
 	"encoding/json"
@@ -7,15 +7,17 @@ import (
 	"net/http"
 )
 
-var endpoint = "https://api.itbit.com/v1/markets"
-
 type MarketService struct {
 	httpClient *http.Client
+	endpoint   string
 }
 
-// NewMarketService returns a pointer to a MarketService.
-func NewMarketService(c *http.Client) *MarketService {
-	return &MarketService{c}
+// newMarketService returns a pointer to a MarketService.
+func newMarketService(c *http.Client) *MarketService {
+	return &MarketService{
+		httpClient: c,
+		endpoint:   endpoint + "/markets",
+	}
 }
 
 // GetTicker returns TickerInfo for the specified market.
@@ -24,7 +26,7 @@ func (s *MarketService) GetTicker(tickerSymbol string) (TickerInfo, error) {
 	if tickerSymbol == "" {
 		return tickerInfo, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := endpoint + "/" + tickerSymbol + "/ticker"
+	URL := s.endpoint + "/" + tickerSymbol + "/ticker"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return tickerInfo, err
@@ -51,7 +53,7 @@ func (s *MarketService) GetOrderBook(tickerSymbol string) (OrderBook, error) {
 	if tickerSymbol == "" {
 		return orderBook, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := endpoint + "/" + tickerSymbol + "/order_book"
+	URL := s.endpoint + "/" + tickerSymbol + "/order_book"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return orderBook, err
@@ -80,7 +82,7 @@ func (s *MarketService) GetRecentTrades(tickerSymbol, since string) (RecentTrade
 	if tickerSymbol == "" {
 		return recentTrades, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
 	}
-	URL := endpoint + "/" + tickerSymbol + "/trades"
+	URL := s.endpoint + "/" + tickerSymbol + "/trades"
 	if since != "" {
 		URL = fmt.Sprintf("%s?since=%s", URL, since)
 	}

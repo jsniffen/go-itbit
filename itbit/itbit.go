@@ -2,9 +2,6 @@ package itbit
 
 import (
 	"net/http"
-
-	"github.com/juliansniff/go-itbit/itbit/market"
-	"github.com/juliansniff/go-itbit/itbit/trading"
 )
 
 const (
@@ -22,15 +19,19 @@ const (
 	EtheriumSingaporeDollar = "ETHSGD"
 )
 
+var (
+	endpoint = "https://api.itbit.com/v1"
+)
+
 type Client struct {
-	*market.MarketService
-	*trading.TradingService
+	*MarketService
+	*TradingService
 }
 
 func NewClient(key, secret string) *Client {
 	client := &http.Client{}
 	return &Client{
-		market.NewMarketService(client),
-		trading.NewTradingService(client, key, secret),
+		newMarketService(client),
+		newTradingService(client, key, secret),
 	}
 }

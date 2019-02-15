@@ -1,4 +1,4 @@
-package trading
+package itbit
 
 type Wallet struct {
 	ID       string `json:"id"`
