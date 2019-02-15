@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/juliansniff/go-itbit/itbit/market"
+	"github.com/juliansniff/go-itbit/itbit/trading"
 )
 
 const (
@@ -24,12 +25,14 @@ const (
 )
 
 type Client struct {
-	MarketService *market.Service
+	MarketService  *market.Service
+	TradingService *trading.Service
 }
 
-func NewClient() *Client {
+func NewClient(key, secret string) *Client {
 	client := &http.Client{}
 	return &Client{
-		MarketService: market.NewService(client, Endpoint),
+		MarketService:  market.NewService(client, Endpoint),
+		TradingService: trading.NewService(client, Endpoint, key, secret),
 	}
 }
