@@ -2,6 +2,9 @@ package itbit
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 )
 
@@ -49,4 +52,31 @@ func (ob *OrderBook) UnmarshalJSON(b []byte) error {
 	ob.Asks = asks
 	ob.Bids = bids
 	return nil
+}
+
+// GetOrderBook returns the full order book for the specified market.
+func (c *Client) GetOrderBook(tickerSymbol string) (OrderBook, error) {
+	var orderBook OrderBook
+	if tickerSymbol == "" {
+		return orderBook, fmt.Errorf("tickerSymbol is a required field, got empty string")
+	}
+	URL := endpoint + "/markets/" + tickerSymbol + "/order_book"
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return orderBook, err
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return orderBook, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return orderBook, err
+	}
+	err = json.Unmarshal(b, &orderBook)
+	if err != nil {
+		return orderBook, err
+	}
+	return orderBook, nil
 }

@@ -23,10 +23,7 @@ func mockRequest(method, URL, body string) *http.Request {
 }
 
 func TestSignRequest(t *testing.T) {
-	s := &TradingService{
-		key:    "key",
-		secret: "secret",
-	}
+	c := NewClient("key", "secret")
 
 	tests := map[*http.Request](map[string]string){
 		mockRequest(http.MethodGet, "get-endpoint", ""): map[string]string{
@@ -68,7 +65,7 @@ func TestSignRequest(t *testing.T) {
 	}
 
 	for request, headers := range tests {
-		err := s.signRequest(request)
+		err := c.signRequest(request)
 		if err != nil {
 			t.Errorf("error signing request: %v", err)
 		}

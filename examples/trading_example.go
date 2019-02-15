@@ -18,7 +18,7 @@ func main() {
 	client := itbit.NewClient(key, secret)
 	wallets, err := client.GetAllWallets(userID, 0, 0)
 	if err != nil {
-		log.Panic(err)
+		log.Printf("%v", err)
 	}
 	fmt.Printf("%v", wallets)
 }

@@ -1,6 +1,10 @@
 package itbit
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 )
 
@@ -22,4 +26,31 @@ type TickerInfo struct {
 	VwapToday     float64   `json:"vwapToday,string"`
 	Vwap24H       float64   `json:"vwap24h,string"`
 	ServerTimeUTC time.Time `json:"serverTimeUTC"`
+}
+
+// GetTicker returns TickerInfo for the specified market.
+func (c *Client) GetTicker(tickerSymbol string) (TickerInfo, error) {
+	var tickerInfo TickerInfo
+	if tickerSymbol == "" {
+		return tickerInfo, fmt.Errorf("tickerSymbol is a required field, got empty string")
+	}
+	URL := endpoint + "/markets/" + tickerSymbol + "/ticker"
+	req, err := http.NewRequest(http.MethodGet, URL, nil)
+	if err != nil {
+		return tickerInfo, err
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return tickerInfo, err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return tickerInfo, err
+	}
+	err = json.Unmarshal(b, &tickerInfo)
+	if err != nil {
+		return tickerInfo, err
+	}
+	return tickerInfo, nil
 }
