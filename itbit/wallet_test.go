@@ -162,7 +162,7 @@ func TestMain(m *testing.M) {
 	r.HandleFunc("/wallets/{id}/balances/{currency}", handleGetWalletBalance).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}", handleGetWallet).Methods(http.MethodGet)
 	r.HandleFunc("/wallets", handleGetAllWallets).Methods(http.MethodGet)
-	r.HandleFunc("/wallets", handleCreateNewWallet).Methods(http.MethodPost)
+	r.HandleFunc("/{id}", handleCreateNewWallet).Methods(http.MethodPost)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -181,14 +181,15 @@ func ExampleClient_GetAllWallets() {
 	for _, wallet := range wallets {
 		fmt.Printf("%s:\n", wallet.Name)
 		for _, balance := range wallet.Balances {
-			fmt.Printf("%10.2f %s\t", balance.AvailableBalance, balance.Currency)
+			fmt.Printf("%.2f %s", balance.AvailableBalance, balance.Currency)
 		}
 		fmt.Printf("\n")
 	}
+	// Output:
 	// Wallet 1:
-	// 0.00 USD	      0.00 XBT	      0.00 EUR	      0.00 SGD
+	// 0.00 USD0.00 XBT0.00 EUR0.00 SGD
 	// Wallet 2:
-	// 75631.89 USD	 100100.03 XBT	 100000.00 EUR	 100000.00 SGD
+	// 75631.89 USD100100.03 XBT100000.00 EUR100000.00 SGD
 }
 
 func ExampleClient_CreateNewWallet() {
@@ -202,6 +203,7 @@ func ExampleClient_CreateNewWallet() {
 	for _, balance := range wallet.Balances {
 		fmt.Printf("%.2f %s Available\n", balance.AvailableBalance, balance.Currency)
 	}
+	// Output:
 	// New Wallet:
 	// 0.00 USD Available
 	// 0.00 XBT Available

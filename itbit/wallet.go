@@ -68,7 +68,10 @@ func (c *Client) CreateNewWallet(userID, walletName string) (Wallet, error) {
 
 	url := fmt.Sprintf("%s/%s", Endpoint, wallet)
 
-	c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(bodyJSON), &wallet)
+	err = c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(bodyJSON), &wallet)
+	if err != nil {
+		return wallet, fmt.Errorf("could not do authenticated request: %v", err)
+	}
 
 	return wallet, nil
 }
