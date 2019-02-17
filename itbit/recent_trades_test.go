@@ -38,7 +38,7 @@ func TestGetRecentTrades(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	endpoint = ts.URL
+	Endpoint = ts.URL
 	c := NewClient("", "")
 
 	got, err := c.GetRecentTrades("tickerSymbol", "")

@@ -26,7 +26,7 @@ func (c *Client) GetRecentTrades(tickerSymbol, since string) (RecentTradesRespon
 	if tickerSymbol == "" {
 		return recentTrades, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
 	}
-	URL := endpoint + "/markets/" + tickerSymbol + "/trades"
+	URL := Endpoint + "/markets/" + tickerSymbol + "/trades"
 	if since != "" {
 		URL = fmt.Sprintf("%s?since=%s", URL, since)
 	}

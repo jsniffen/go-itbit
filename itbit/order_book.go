@@ -60,7 +60,7 @@ func (c *Client) GetOrderBook(tickerSymbol string) (OrderBook, error) {
 	if tickerSymbol == "" {
 		return orderBook, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := endpoint + "/markets/" + tickerSymbol + "/order_book"
+	URL := Endpoint + "/markets/" + tickerSymbol + "/order_book"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return orderBook, err

@@ -1,12 +1,14 @@
 package itbit
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -29,7 +31,7 @@ const (
 )
 
 var (
-	endpoint = "https://api.itbit.com/v1"
+	Endpoint = "https://api.itbit.com/v1"
 	epoch    = func() int64 {
 		return time.Now().UnixNano() / 1000000
 	}
@@ -64,6 +66,40 @@ func (c *Client) SetSecret(secret string) {
 	c.secret = secret
 }
 
+func (c *Client) doAuthenticatedRequest(method, url string, body io.Reader, object interface{}) error {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return fmt.Errorf("could not create request: %v", err)
+	}
+
+	err = c.signRequest(req)
+	if err != nil {
+		return fmt.Errorf("could not sign request: %v", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("could not do request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("could not read response body: %v", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("%s: %s", resp.Status, string(b))
+	}
+
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return fmt.Errorf("error Unmarshalling response body into wallet: %v", err)
+	}
+
+	return nil
+}
+
 func (c *Client) signRequest(r *http.Request) error {
 	timestamp := strconv.FormatInt(epoch(), 10)
 	nonce := strconv.FormatInt(nonce(), 10)
@@ -77,6 +113,9 @@ func (c *Client) signRequest(r *http.Request) error {
 		if err != nil {
 			return fmt.Errorf("error reading request body: %v", err)
 		}
+		defer r.Body.Close()
+
+		r.Body = ioutil.NopCloser(bytes.NewReader(body))
 	}
 
 	message, err := json.Marshal([]string{r.Method, r.URL.String(), string(body), nonce, timestamp})

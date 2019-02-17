@@ -34,7 +34,7 @@ func (c *Client) GetTicker(tickerSymbol string) (TickerInfo, error) {
 	if tickerSymbol == "" {
 		return tickerInfo, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := endpoint + "/markets/" + tickerSymbol + "/ticker"
+	URL := Endpoint + "/markets/" + tickerSymbol + "/ticker"
 	req, err := http.NewRequest(http.MethodGet, URL, nil)
 	if err != nil {
 		return tickerInfo, err
