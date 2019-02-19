@@ -13,6 +13,13 @@ type Balance struct {
 	TotalBalance     float64 `json:"totalBalance,string"`
 }
 
+type Transfer struct {
+	SourceWalletID      string  `json:"sourceWalletID"`
+	DestinationWalletID string  `json:"destinationWalletID"`
+	Amount              float64 `json:"amount,string"`
+	CurrencyCode        string  `json:"currencyCode"`
+}
+
 type Wallet struct {
 	ID       string    `json:"id"`
 	UserID   string    `json:"userId"`
@@ -113,4 +120,23 @@ func (c *Client) GetWalletBalance(walletID, currencyCode string) (Balance, error
 	}
 
 	return balance, nil
+}
+
+// NewWalletTransfer transfers funds from one wallet to another.
+func (c *Client) NewWalletTransfer(transfer Transfer) (Transfer, error) {
+	var response Transfer
+
+	body, err := json.Marshal(transfer)
+	if err != nil {
+		return response, fmt.Errorf("could not marshal body: %v", err)
+	}
+
+	url := fmt.Sprintf("%s/%s", Endpoint, "wallet_transfers")
+
+	err = c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(body), &response)
+	if err != nil {
+		return response, fmt.Errorf("could not do authenticated request: %v", err)
+	}
+
+	return response, nil
 }

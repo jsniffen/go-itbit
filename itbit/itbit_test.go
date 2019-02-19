@@ -15,10 +15,13 @@ import (
 
 func TestMain(m *testing.M) {
 	r := mux.NewRouter()
+	r.HandleFunc("/wallet_transfers", handleNewWalletTransfer).Methods(http.MethodPost)
 	r.HandleFunc("/markets/{tickerSymbol}/ticker", handleGetTicker).Methods(http.MethodGet)
 	r.HandleFunc("/markets/{tickerSymbol}/trades", handleGetRecentTrades).Methods(http.MethodGet)
 	r.HandleFunc("/markets/{tickerSymbol}/order_book", handleGetOrderBook).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}/balances/{currency}", handleGetWalletBalance).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}/orders/{orderID}", handleGetOrder).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}/orders", handleGetOrders).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}", handleGetWallet).Methods(http.MethodGet)
 	r.HandleFunc("/wallets", handleGetAllWallets).Methods(http.MethodGet)
 	r.HandleFunc("/{id}", handleCreateNewWallet).Methods(http.MethodPost)
@@ -27,6 +30,11 @@ func TestMain(m *testing.M) {
 
 	itbit.Endpoint = ts.URL
 	os.Exit(m.Run())
+}
+
+func handleNewWalletTransfer(w http.ResponseWriter, r *http.Request) {
+	b, _ := ioutil.ReadAll(r.Body)
+	fmt.Fprintf(w, string(b))
 }
 
 func handleGetOrderBook(w http.ResponseWriter, r *http.Request) {
@@ -241,5 +249,55 @@ func handleCreateNewWallet(w http.ResponseWriter, r *http.Request) {
 					}
 				]
 			}`, userID, name)
+	fmt.Fprintf(w, response)
+}
+
+func handleGetOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	response := fmt.Sprintf(`
+		{
+			"id": "5b1f51e1-3f38-4d64-918c-45c5848c76fb",
+			"walletId": "%s",
+			"side": "buy",
+			"instrument": "XBTUSD",
+			"type": "limit",
+			"currency": "XBT",
+			"amount": "2.5",
+			"price": "650",
+			"amountFilled": "1",
+			"volumeWeightedAveragePrice": "650",
+			"createdTime": "2014-02-11T17:05:15Z",
+			"status": "open",
+			"metadata": {},
+			"clientOrderIdentifier": null
+		}
+	`, id)
+	fmt.Fprintf(w, response)
+}
+
+func handleGetOrders(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	response := fmt.Sprintf(`
+		[
+			{
+				"id": "5b1f51e1-3f38-4d64-918c-45c5848c76fb",
+				"walletId": "%s",
+				"side": "buy",
+				"instrument": "XBTUSD",
+				"type": "limit",
+				"currency": "XBT",
+				"amount": "2.5",
+				"price": "650",
+				"amountFilled": "1",
+				"volumeWeightedAveragePrice": "650",
+				"createdTime": "2014-02-11T17:05:15Z",
+				"status": "open",
+				"metadata": {},
+				"clientOrderIdentifier": null
+			}
+		]
+	`, id)
 	fmt.Fprintf(w, response)
 }

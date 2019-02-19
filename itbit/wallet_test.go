@@ -78,3 +78,19 @@ func ExampleClient_GetWalletBalance() {
 	fmt.Printf("wallet has %.2f %s", balance.TotalBalance, balance.Currency)
 	// Output: wallet has 0.00 USD
 }
+
+func ExampleClient_NewWalletTransfer() {
+	c := itbit.NewClient("key", "secret")
+	t, err := c.NewWalletTransfer(itbit.Transfer{
+		SourceWalletID:      "7e037345-1288-4c39-12fe-d0f99a475a98",
+		DestinationWalletID: "b30cpab8-c468-9950-a771-be0db2b39dea",
+		Amount:              1773.80,
+		CurrencyCode:        itbit.Bitcoin,
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("Successfully transferred %.2f %s from %s to %s", t.Amount, t.CurrencyCode, t.SourceWalletID, t.DestinationWalletID)
+	// Output: Successfully transferred 1773.80 XBT from 7e037345-1288-4c39-12fe-d0f99a475a98 to b30cpab8-c468-9950-a771-be0db2b39dea
+}

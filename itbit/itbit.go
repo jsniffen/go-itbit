@@ -16,6 +16,12 @@ import (
 )
 
 const (
+	StatusCancelled = "cancelled"
+	StatusFilled    = "filled"
+	StatusOpen      = "open"
+	StatusRejected  = "rejected"
+	StatusSubmitted = "submitted"
+
 	Bitcoin         = "XBT"
 	Etherium        = "ETH"
 	Euro            = "EUR"
@@ -89,7 +95,7 @@ func (c *Client) doRequest(method, url string, body io.Reader, object interface{
 
 	err = json.Unmarshal(b, &object)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response body into wallet: %v", err)
+		return fmt.Errorf("error unmarshalling response body: %v", err)
 	}
 
 	return nil
@@ -123,7 +129,7 @@ func (c *Client) doAuthenticatedRequest(method, url string, body io.Reader, obje
 
 	err = json.Unmarshal(b, &object)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling response body into wallet: %v", err)
+		return fmt.Errorf("error unmarshalling response body: %#v: %v", string(b), err)
 	}
 
 	return nil
