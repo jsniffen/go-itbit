@@ -1,6 +1,8 @@
 package itbit
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,6 +17,7 @@ type Order struct {
 	Type                       string      `json:"type"`
 	Currency                   string      `json:"currency"`
 	Amount                     float64     `json:"amount,string"`
+	Display                    float64     `json:"display,string"`
 	Price                      float64     `json:"price,string"`
 	AmountFilled               float64     `json:"amountFilled,string"`
 	VolumeWeightedAveragePrice string      `json:"volumeWeightedAveragePrice"`
@@ -22,6 +25,7 @@ type Order struct {
 	Status                     string      `json:"status"`
 	Metadata                   interface{} `json:"metadata"`
 	ClientOrderIdentifier      interface{} `json:"clientOrderIdentifier"`
+	PostOnly                   bool        `json:"postOnly"`
 }
 
 // GetOrder returns a particular order based off of a wallet ID and an order ID.
@@ -40,6 +44,7 @@ func (c *Client) GetOrder(walletID, orderID string) (Order, error) {
 	return order, nil
 }
 
+// GetOrders returns an array of orders given a wallet ID.
 func (c *Client) GetOrders(walletID, instrument, page, perPage, status string) ([]Order, error) {
 	var orders []Order
 
@@ -71,4 +76,36 @@ func (c *Client) GetOrders(walletID, instrument, page, perPage, status string) (
 
 	return orders, nil
 
+}
+
+func (c *Client) CreateNewOrder(walletID string, order Order) (Order, error) {
+	var response Order
+
+	URL := fmt.Sprintf("%s/wallets/%s/orders", Endpoint, walletID)
+
+	body, err := json.Marshal(order)
+	if err != nil {
+		return response, fmt.Errorf("could not marshal Order %#v: %v", order, err)
+	}
+
+	err = c.doAuthenticatedRequest(http.MethodPost, URL, bytes.NewBuffer(body), &response)
+	if err != nil {
+		fmt.Errorf("could not do authenticated CreateNewOrder request: %v", err)
+	}
+
+	return response, nil
+}
+
+// CancelOrder cancels an order for the specified wallet ID and order ID.
+// A successful response indicates that the request was recieved, but does
+// not guarantee the order was cancelled.
+func (c *Client) CancelOrder(walletID, orderID string) (bool, error) {
+	URL := fmt.Sprintf("%s/wallets/%s/orders/%s", Endpoint, walletID, orderID)
+
+	err := c.doAuthenticatedRequest(http.MethodDelete, URL, nil, nil)
+	if err != nil {
+		return false, fmt.Errorf("could not do authenticated CancelOrder request: %v", err)
+	}
+
+	return true, nil
 }

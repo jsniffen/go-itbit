@@ -127,9 +127,11 @@ func (c *Client) doAuthenticatedRequest(method, url string, body io.Reader, obje
 		return fmt.Errorf("%s: %s", resp.Status, string(b))
 	}
 
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return fmt.Errorf("error unmarshalling response body: %#v: %v", string(b), err)
+	if object != nil {
+		err = json.Unmarshal(b, &object)
+		if err != nil {
+			return fmt.Errorf("error unmarshalling response body: %#v: %v", string(b), err)
+		}
 	}
 
 	return nil

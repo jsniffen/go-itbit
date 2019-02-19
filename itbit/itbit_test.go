@@ -21,7 +21,9 @@ func TestMain(m *testing.M) {
 	r.HandleFunc("/markets/{tickerSymbol}/order_book", handleGetOrderBook).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}/balances/{currency}", handleGetWalletBalance).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}/orders/{orderID}", handleGetOrder).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}/orders/{orderID}", handleCancelOrder).Methods(http.MethodDelete)
 	r.HandleFunc("/wallets/{id}/orders", handleGetOrders).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}/orders", handleCreateNewOrder).Methods(http.MethodPost)
 	r.HandleFunc("/wallets/{id}", handleGetWallet).Methods(http.MethodGet)
 	r.HandleFunc("/wallets", handleGetAllWallets).Methods(http.MethodGet)
 	r.HandleFunc("/{id}", handleCreateNewWallet).Methods(http.MethodPost)
@@ -300,4 +302,13 @@ func handleGetOrders(w http.ResponseWriter, r *http.Request) {
 		]
 	`, id)
 	fmt.Fprintf(w, response)
+}
+
+func handleCreateNewOrder(w http.ResponseWriter, r *http.Request) {
+	b, _ := ioutil.ReadAll(r.Body)
+	fmt.Fprintf(w, string(b))
+}
+
+func handleCancelOrder(w http.ResponseWriter, r *http.Request) {
+	return
 }
