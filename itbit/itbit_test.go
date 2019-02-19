@@ -1,79 +1,245 @@
-package itbit
+package itbit_test
 
 import (
-	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/juliansniff/go-itbit/itbit"
 )
 
-func init() {
-	epoch = func() int64 {
-		return 0
-	}
-	nonce = func() int64 {
-		return 0
-	}
+func TestMain(m *testing.M) {
+	r := mux.NewRouter()
+	r.HandleFunc("/markets/{tickerSymbol}/ticker", handleGetTicker).Methods(http.MethodGet)
+	r.HandleFunc("/markets/{tickerSymbol}/trades", handleGetRecentTrades).Methods(http.MethodGet)
+	r.HandleFunc("/markets/{tickerSymbol}/order_book", handleGetOrderBook).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}/balances/{currency}", handleGetWalletBalance).Methods(http.MethodGet)
+	r.HandleFunc("/wallets/{id}", handleGetWallet).Methods(http.MethodGet)
+	r.HandleFunc("/wallets", handleGetAllWallets).Methods(http.MethodGet)
+	r.HandleFunc("/{id}", handleCreateNewWallet).Methods(http.MethodPost)
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	itbit.Endpoint = ts.URL
+	os.Exit(m.Run())
 }
 
-func mockRequest(method, URL, body string) *http.Request {
-	reader := ioutil.NopCloser(bytes.NewBufferString(body))
-	r, _ := http.NewRequest(method, URL, reader)
-	return r
+func handleGetOrderBook(w http.ResponseWriter, r *http.Request) {
+	response := `{
+		"asks": [
+			[ "219.82", "2.19" ],
+			[ "219.83", "6.05" ],
+			[ "220.19", "17.59" ],
+			[ "220.52", "3.36" ],
+			[ "220.53", "33.46" ]
+		],
+		"bids": [
+			[ "219.40", "17.46" ],
+			[ "219.13", "53.93" ],
+			[ "219.08", "2.20" ],
+			[ "218.58", "98.73" ],
+			[ "218.20", "3.37" ]
+		]
+	}`
+	fmt.Fprintf(w, response)
 }
 
-func TestSignRequest(t *testing.T) {
-	c := NewClient("key", "secret")
-
-	tests := map[*http.Request](map[string]string){
-		mockRequest(http.MethodGet, "get-endpoint", ""): map[string]string{
-			"Authorization":    "key:PwcuTHG+Yzkybs1Q7ReKJg86jqO+eWnRsSBYgmuvOby2WQ+TVGTQYUogt5QslBASlmfNQxXMmvfZV60+yK/8NQ==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-		mockRequest(http.MethodGet, "get-endpoint", "get body"): map[string]string{
-			"Authorization":    "key:nMu5IJo9LooMbrNG1Xk4wUz8ru5j/6k8yZ7Gzmtbm+RRwWI+l9AkVLp5ksOxUBgmEmAblzg7miX9BcRJ1VuZZw==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-		mockRequest(http.MethodPost, "post-endpoint", ""): map[string]string{
-			"Authorization":    "key:tmfXBl4nDuXOI1mn3NgRZcvI5oEtNgnzcKtRAeTZVyv9hn6nOS3hGzARomLMm7gtlFI9FWSGLVr5krt5Zx6V3Q==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-		mockRequest(http.MethodPost, "post-endpoint", "post body"): map[string]string{
-			"Authorization":    "key:rkSaNY9lucJWhpPLNBcpXaqS2ee7s8kfwdlYAkh2z/CHK++aMRTj8kdc9BighCAETGCf7bAh2XrZpK5DikMZsg==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-		mockRequest(http.MethodDelete, "delete-endpoint", ""): map[string]string{
-			"Authorization":    "key:fTHYTHf9/Kd2kAGe09n6qQ3c/D8VdDQKNHl27TqIaFEC4umGaQvoqJS84WJ7sxQUV6E4FbJhzVisjtv7jYerGA==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-		mockRequest(http.MethodDelete, "delete-endpoint", "delete body"): map[string]string{
-			"Authorization":    "key:7VjGDwwLLkDD/ebOYuZf1wo9P19nbYjevEuIcCvO5u5W1B6X01eB+gobKo2V8ADTwlXRSieK6sFhV7lH1PUkhQ==",
-			"X-Auth-Timestamp": "0",
-			"X-Auth-Nonce":     "0",
-			"Content-Type":     "application/json",
-		},
-	}
-
-	for request, headers := range tests {
-		err := c.signRequest(request)
-		if err != nil {
-			t.Errorf("error signing request: %v", err)
-		}
-
-		for key, expected := range headers {
-			if got := request.Header.Get(key); got != expected {
-				t.Errorf("Expected %s to be: %v, got %v", key, expected, got)
+func handleGetRecentTrades(w http.ResponseWriter, r *http.Request) {
+	response := `{
+		"count": 3,
+		"recentTrades": [
+			{
+				"timestamp": "2015-05-22T17:45:34.7570000Z",
+				"matchNumber": "5CR1JEUBBM8J",
+				"price": "351.45000000",
+				"amount": "0.00010000"
+			},
+			{
+				"timestamp": "2015-05-22T17:01:08.4270000Z",
+				"matchNumber": "5CR1JEUBBM8F",
+				"price": "352.00000000",
+				"amount": "0.00010000"
+			},
+			{
+				"timestamp": "2015-05-22T17:01:04.8630000Z",
+				"matchNumber": "5CR1JEUBBM8C",
+				"price": "351.45000000",
+				"amount": "0.00010000"
 			}
-		}
-	}
+		]
+	}`
+	fmt.Fprintf(w, response)
+}
+
+func handleGetTicker(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tickerSymbol := vars["tickerSymbol"]
+	response := fmt.Sprintf(`{
+		  "pair": "%s",
+		  "bid": "622",
+		  "bidAmt": "0.0006",
+		  "ask": "641.29",
+		  "askAmt": "0.5",
+		  "lastPrice": "618.00000000",
+		  "lastAmt": "0.00040000",
+		  "volume24h": "0.00040000",
+		  "volumeToday": "0.00040000",
+		  "high24h": "618.00000000",
+		  "low24h": "618.00000000",
+		  "highToday": "618.00000000",
+		  "lowToday": "618.00000000",
+		  "openToday": "618.00000000",
+		  "vwapToday": "618.00000000",
+		  "vwap24h": "618.00000000",
+		  "serverTimeUTC": "2014-06-24T20:42:35.6160000Z"
+		}`, tickerSymbol)
+	fmt.Fprintf(w, response)
+}
+
+func handleGetWalletBalance(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	currency := vars["currency"]
+	response := fmt.Sprintf(`{
+				"currency": "%s",
+				"availableBalance": "0",
+				"totalBalance": "0"
+			}`, currency)
+	fmt.Fprintf(w, response)
+}
+
+func handleGetWallet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	response := fmt.Sprintf(`{
+			"id": "%s",
+			"userId": "userID",
+			"name": "Test Wallet",
+			"balances": [
+				{
+					"currency": "USD",
+					"availableBalance": "50000.0000000",
+					"totalBalance": "50000.0000000"
+				},
+				{
+					"currency": "XBT",
+					"availableBalance": "100.00000000",
+					"totalBalance": "100.00000000"
+				},
+				{
+					"currency": "EUR",
+					"availableBalance": "100000.00000000",
+					"totalBalance": "100000.00000000"
+				},
+				{
+					"currency": "SGD",
+					"availableBalance": "515440.88288502",
+					"totalBalance": "515432.74228603"
+				}
+			]
+		}`, id)
+	fmt.Fprintf(w, response)
+}
+
+func handleGetAllWallets(w http.ResponseWriter, r *http.Request) {
+	response := `[
+			{
+				"id": "f46eb6b0-2a7f-4c07-898e-856d58568fde",
+				"userId": "e9c856db-c726-46b2-ace0-a806671105fb",
+				"name": "Wallet 1",
+				"balances": [
+					{
+						"currency": "USD",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "XBT",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "EUR",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "SGD",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					}
+				]
+			},
+			{
+				"id": "2224db00-da07-46f7-ba37-b877e1cd455a",
+				"userId": "e9c856db-c726-46b2-ace0-a806671105fb",
+				"name": "Wallet 2",
+				"balances": [
+					{
+						"currency": "USD",
+						"availableBalance": "75631.88785992",
+						"totalBalance": "75631.88785999"
+					},
+					{
+						"currency": "XBT",
+						"availableBalance": "100100.03000000",
+						"totalBalance": "100100.03000000"
+					},
+					{
+						"currency": "EUR",
+						"availableBalance": "100000.00000000",
+						"totalBalance": "100000.00000000"
+					},
+					{
+						"currency": "SGD",
+						"availableBalance": "100000.00000000",
+						"totalBalance": "100000.00000000"
+					}
+				]
+			}
+		]`
+	fmt.Fprintf(w, response)
+}
+
+func handleCreateNewWallet(w http.ResponseWriter, r *http.Request) {
+	b, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+	var body map[string]string
+	_ = json.Unmarshal(b, &body)
+
+	name := body["name"]
+	userID := body["userId"]
+
+	response := fmt.Sprintf(`{
+				"id": "walletID",
+				"userId": "%s",
+				"name": "%s",
+				"balances": [
+					{
+						"currency": "USD",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "XBT",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "EUR",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					},
+					{
+						"currency": "SGD",
+						"availableBalance": "0.00000000",
+						"totalBalance": "0.00000000"
+					}
+				]
+			}`, userID, name)
+	fmt.Fprintf(w, response)
 }

@@ -66,7 +66,7 @@ func (c *Client) CreateNewWallet(userID, walletName string) (Wallet, error) {
 		return wallet, fmt.Errorf("could not marshal bodyMap: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/%s", Endpoint, wallet)
+	url := fmt.Sprintf("%s/%s", Endpoint, "wallets")
 
 	err = c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(bodyJSON), &wallet)
 	if err != nil {

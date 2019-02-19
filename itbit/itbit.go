@@ -66,6 +66,35 @@ func (c *Client) SetSecret(secret string) {
 	c.secret = secret
 }
 
+func (c *Client) doRequest(method, url string, body io.Reader, object interface{}) error {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return fmt.Errorf("could not create request: %v", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("could not do request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("could not read response body: %v", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("%s: %s", resp.Status, string(b))
+	}
+
+	err = json.Unmarshal(b, &object)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling response body into wallet: %v", err)
+	}
+
+	return nil
+}
+
 func (c *Client) doAuthenticatedRequest(method, url string, body io.Reader, object interface{}) error {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -94,7 +123,7 @@ func (c *Client) doAuthenticatedRequest(method, url string, body io.Reader, obje
 
 	err = json.Unmarshal(b, &object)
 	if err != nil {
-		return fmt.Errorf("error Unmarshalling response body into wallet: %v", err)
+		return fmt.Errorf("error unmarshalling response body into wallet: %v", err)
 	}
 
 	return nil

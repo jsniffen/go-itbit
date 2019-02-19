@@ -1,14 +1,12 @@
 package itbit
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-type RecentTradesResponse struct {
+type Trades struct {
 	Count        int `json:"count"`
 	RecentTrades []struct {
 		Timestamp   time.Time `json:"timestamp"`
@@ -21,31 +19,23 @@ type RecentTradesResponse struct {
 // MarketService returns recent trades for the specified market
 //
 // since is an optional parameter
-func (c *Client) GetRecentTrades(tickerSymbol, since string) (RecentTradesResponse, error) {
-	var recentTrades RecentTradesResponse
+func (c *Client) GetRecentTrades(tickerSymbol, since string) (Trades, error) {
+	var trades Trades
+
 	if tickerSymbol == "" {
-		return recentTrades, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
+		return trades, fmt.Errorf("tickerSymbol is a required field, got: %s", tickerSymbol)
 	}
-	URL := Endpoint + "/markets/" + tickerSymbol + "/trades"
+
+	url := fmt.Sprintf("%s/markets/%s/trades", Endpoint, tickerSymbol)
+
 	if since != "" {
-		URL = fmt.Sprintf("%s?since=%s", URL, since)
+		url = fmt.Sprintf("%s?since=%s", url, since)
 	}
-	req, err := http.NewRequest(http.MethodGet, URL, nil)
+
+	err := c.doRequest(http.MethodGet, url, nil, &trades)
 	if err != nil {
-		return recentTrades, err
+		return trades, fmt.Errorf("could not do request: %v", err)
 	}
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return recentTrades, err
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return recentTrades, err
-	}
-	err = json.Unmarshal(b, &recentTrades)
-	if err != nil {
-		return recentTrades, err
-	}
-	return recentTrades, nil
+
+	return trades, nil
 }

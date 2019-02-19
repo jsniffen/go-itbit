@@ -1,14 +1,12 @@
 package itbit
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-type TickerInfo struct {
+type Ticker struct {
 	Pair          string    `json:"pair"`
 	Bid           float64   `json:"bid,string"`
 	BidAmt        float64   `json:"bidAmt,string"`
@@ -28,29 +26,20 @@ type TickerInfo struct {
 	ServerTimeUTC time.Time `json:"serverTimeUTC"`
 }
 
-// GetTicker returns TickerInfo for the specified market.
-func (c *Client) GetTicker(tickerSymbol string) (TickerInfo, error) {
-	var tickerInfo TickerInfo
+// GetTicker returns Ticker for the specified market.
+func (c *Client) GetTicker(tickerSymbol string) (Ticker, error) {
+	var ticker Ticker
+
 	if tickerSymbol == "" {
-		return tickerInfo, fmt.Errorf("tickerSymbol is a required field, got empty string")
+		return ticker, fmt.Errorf("tickerSymbol is a required field, got empty string")
 	}
-	URL := Endpoint + "/markets/" + tickerSymbol + "/ticker"
-	req, err := http.NewRequest(http.MethodGet, URL, nil)
+
+	url := fmt.Sprintf("%s/markets/%s/ticker", Endpoint, tickerSymbol)
+
+	err := c.doRequest(http.MethodGet, url, nil, &ticker)
 	if err != nil {
-		return tickerInfo, err
+		return ticker, fmt.Errorf("could not do request: %v", err)
 	}
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return tickerInfo, err
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return tickerInfo, err
-	}
-	err = json.Unmarshal(b, &tickerInfo)
-	if err != nil {
-		return tickerInfo, err
-	}
-	return tickerInfo, nil
+
+	return ticker, nil
 }

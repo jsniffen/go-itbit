@@ -1,61 +1,40 @@
-package itbit
+package itbit_test
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"reflect"
-	"testing"
+	"log"
+
+	"github.com/juliansniff/go-itbit/itbit"
 )
 
-func TestGetOrderBook(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response := `{
-			"asks": [
-				[ "219.82", "2.19" ],
-				[ "219.83", "6.05" ],
-				[ "220.19", "17.59" ],
-				[ "220.52", "3.36" ],
-				[ "220.53", "33.46" ]
-			],
-			"bids": [
-				[ "219.40", "17.46" ],
-				[ "219.13", "53.93" ],
-				[ "219.08", "2.20" ],
-				[ "218.58", "98.73" ],
-				[ "218.20", "3.37" ]
-			]
-		}`
-		fmt.Fprintf(w, response)
-	}))
-	defer ts.Close()
+func ExampleClient_GetOrderBook() {
+	c := itbit.NewClient("key", "secret")
 
-	Endpoint = ts.URL
-	c := NewClient("", "")
-
-	got, err := c.GetOrderBook("tickerSymbol")
+	orderBook, err := c.GetOrderBook(itbit.BitcoinUSDollar)
 	if err != nil {
-		t.Errorf("error making request: %v", err)
+		log.Panic(err)
 	}
 
-	expected := OrderBook{
-		Asks: [][]float64{
-			[]float64{219.82, 2.19},
-			[]float64{219.83, 6.05},
-			[]float64{220.19, 17.59},
-			[]float64{220.52, 3.36},
-			[]float64{220.53, 33.46},
-		},
-		Bids: [][]float64{
-			[]float64{219.40, 17.46},
-			[]float64{219.13, 53.93},
-			[]float64{219.08, 2.20},
-			[]float64{218.58, 98.73},
-			[]float64{218.20, 3.37},
-		},
+	fmt.Printf("Asks:\n")
+	for _, ask := range orderBook.Asks {
+		fmt.Printf("[%.2f, %.2f]\n", ask[0], ask[1])
+	}
+	fmt.Printf("Bids:\n")
+	for _, bid := range orderBook.Bids {
+		fmt.Printf("[%.2f, %.2f]\n", bid[0], bid[1])
 	}
 
-	if !reflect.DeepEqual(got, expected) {
-		t.Errorf("got: %v, expected: %v", got, expected)
-	}
+	// Output:
+	// Asks:
+	// [219.82, 2.19]
+	// [219.83, 6.05]
+	// [220.19, 17.59]
+	// [220.52, 3.36]
+	// [220.53, 33.46]
+	// Bids:
+	// [219.40, 17.46]
+	// [219.13, 53.93]
+	// [219.08, 2.20]
+	// [218.58, 98.73]
+	// [218.20, 3.37]
 }
