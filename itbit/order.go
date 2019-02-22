@@ -54,7 +54,7 @@ func (c *Client) GetOrders(walletID, instrument, page, perPage, status string) (
 
 	if page != "" && perPage != "" {
 		p.Set("page", page)
-		p.Set("page", perPage)
+		p.Set("perPage", perPage)
 	}
 
 	if instrument != "" {

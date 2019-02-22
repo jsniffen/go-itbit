@@ -24,6 +24,7 @@ func TestMain(m *testing.M) {
 	r.HandleFunc("/wallets/{id}/orders/{orderID}", handleCancelOrder).Methods(http.MethodDelete)
 	r.HandleFunc("/wallets/{id}/orders", handleGetOrders).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}/orders", handleCreateNewOrder).Methods(http.MethodPost)
+	r.HandleFunc("/wallets/{id}/trades", handleGetFundingHistory).Methods(http.MethodGet)
 	r.HandleFunc("/wallets/{id}", handleGetWallet).Methods(http.MethodGet)
 	r.HandleFunc("/wallets", handleGetAllWallets).Methods(http.MethodGet)
 	r.HandleFunc("/{id}", handleCreateNewWallet).Methods(http.MethodPost)
@@ -32,6 +33,40 @@ func TestMain(m *testing.M) {
 
 	itbit.Endpoint = ts.URL
 	os.Exit(m.Run())
+}
+
+func handleGetFundingHistory(w http.ResponseWriter, r *http.Request) {
+	response := `
+		{
+			"totalNumberOfRecords": "2",
+			"currentPageNumber": "1",
+			"latestExecutionId": "332",
+			"recordsPerPage": "50",
+			"fundingHistory": [
+				{
+					"bankName": "fb6",
+					"withdrawalId": 94,
+					"holdingPeriodCompletionDate": "2015-03-21T17:37:39.9170000",
+					"time": "2015-03-18T17:37:39.9170000",
+					"currency": "EUR",
+					"transactionType": "Withdrawal",
+					"amount": "1.00000000",
+					"walletName": "Wallet",
+					"status": "relayed"
+				},
+				{
+					"destinationAddress": "mfsANnSPCgeRZoc8KYwCA71mmQMuKjUgFJ",
+					"txnHash": "b77ded847997fa52cb340aa65239990d71e02ce335430bab19c20a4c3e84e48f",
+					"time": "2015-02-04T18:52:39.1270000",
+					"currency": "XBT",
+					"transactionType": "Deposit",
+					"amount": "14.89980000",
+					"walletName": "Wallet",
+					"status": "completed"
+				}
+			]
+		}`
+	fmt.Fprintf(w, response)
 }
 
 func handleNewWalletTransfer(w http.ResponseWriter, r *http.Request) {

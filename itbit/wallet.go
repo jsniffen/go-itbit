@@ -5,12 +5,34 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"time"
 )
 
 type Balance struct {
 	Currency         string  `json:"currency"`
 	AvailableBalance float64 `json:"availableBalance,string"`
 	TotalBalance     float64 `json:"totalBalance,string"`
+}
+
+type Funding struct {
+	TotalNumberOfRecords string `json:"totalNumberOfRecords"`
+	CurrentPageNumber    string `json:"currentPageNumber"`
+	LatestExecutionID    string `json:"latestExecutionId"`
+	RecordsPerPage       string `json:"recordsPerPage"`
+	FundingHistory       []struct {
+		BankName                    string `json:"bankName,omitempty"`
+		WithdrawalID                int    `json:"withdrawalId,omitempty"`
+		HoldingPeriodCompletionDate string `json:"holdingPeriodCompletionDate,omitempty"`
+		Time                        string `json:"time"`
+		Currency                    string `json:"currency"`
+		TransactionType             string `json:"transactionType"`
+		Amount                      string `json:"amount"`
+		WalletName                  string `json:"walletName"`
+		Status                      string `json:"status"`
+		DestinationAddress          string `json:"destinationAddress,omitempty"`
+		TxnHash                     string `json:"txnHash,omitempty"`
+	} `json:"fundingHistory"`
 }
 
 type Transfer struct {
@@ -34,17 +56,17 @@ func (c *Client) GetAllWallets(userID string, page, perPage int) ([]Wallet, erro
 		return wallets, fmt.Errorf("userID is required, got empty string")
 	}
 
-	url := fmt.Sprintf("%s/wallets?userId=%s", Endpoint, userID)
+	URL := fmt.Sprintf("%s/wallets?userId=%s", Endpoint, userID)
 
 	if page != 0 {
-		url = fmt.Sprintf("%s?page=%d", url, page)
+		URL = fmt.Sprintf("%s?page=%d", URL, page)
 	}
 
 	if perPage != 0 {
-		url = fmt.Sprintf("%s?perPage=%d", url, perPage)
+		URL = fmt.Sprintf("%s?perPage=%d", URL, perPage)
 	}
 
-	err := c.doAuthenticatedRequest(http.MethodGet, url, nil, &wallets)
+	err := c.doAuthenticatedRequest(http.MethodGet, URL, nil, &wallets)
 	if err != nil {
 		return wallets, fmt.Errorf("could not do authenticated request: %v", err)
 	}
@@ -73,9 +95,9 @@ func (c *Client) CreateNewWallet(userID, walletName string) (Wallet, error) {
 		return wallet, fmt.Errorf("could not marshal bodyMap: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/%s", Endpoint, "wallets")
+	URL := fmt.Sprintf("%s/%s", Endpoint, "wallets")
 
-	err = c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(bodyJSON), &wallet)
+	err = c.doAuthenticatedRequest(http.MethodPost, URL, bytes.NewBuffer(bodyJSON), &wallet)
 	if err != nil {
 		return wallet, fmt.Errorf("could not do authenticated request: %v", err)
 	}
@@ -90,9 +112,9 @@ func (c *Client) GetWallet(walletID string) (Wallet, error) {
 		return wallet, fmt.Errorf("walletID required, got empty string")
 	}
 
-	url := fmt.Sprintf("%s/wallets/%s", Endpoint, walletID)
+	URL := fmt.Sprintf("%s/wallets/%s", Endpoint, walletID)
 
-	err := c.doAuthenticatedRequest(http.MethodGet, url, nil, &wallet)
+	err := c.doAuthenticatedRequest(http.MethodGet, URL, nil, &wallet)
 	if err != nil {
 		fmt.Errorf("could not do authenticated request: %v", err)
 	}
@@ -112,9 +134,9 @@ func (c *Client) GetWalletBalance(walletID, currencyCode string) (Balance, error
 		return balance, fmt.Errorf("currencyCode is required, got empty string")
 	}
 
-	url := fmt.Sprintf("%s/wallets/%s/balances/%s", Endpoint, walletID, currencyCode)
+	URL := fmt.Sprintf("%s/wallets/%s/balances/%s", Endpoint, walletID, currencyCode)
 
-	err := c.doAuthenticatedRequest(http.MethodGet, url, nil, &balance)
+	err := c.doAuthenticatedRequest(http.MethodGet, URL, nil, &balance)
 	if err != nil {
 		return balance, fmt.Errorf("could not do authenticated request: %v", err)
 	}
@@ -131,12 +153,48 @@ func (c *Client) NewWalletTransfer(transfer Transfer) (Transfer, error) {
 		return response, fmt.Errorf("could not marshal body: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/%s", Endpoint, "wallet_transfers")
+	URL := fmt.Sprintf("%s/%s", Endpoint, "wallet_transfers")
 
-	err = c.doAuthenticatedRequest(http.MethodPost, url, bytes.NewBuffer(body), &response)
+	err = c.doAuthenticatedRequest(http.MethodPost, URL, bytes.NewBuffer(body), &response)
 	if err != nil {
 		return response, fmt.Errorf("could not do authenticated request: %v", err)
 	}
 
 	return response, nil
+}
+
+func (c *Client) GetFundingHistory(walletID, lastExecutionID, page, perPage string, rangeStart, rangeEnd time.Time) (Funding, error) {
+	var funding Funding
+
+	URL := fmt.Sprintf("%s/wallets/%s/trades", Endpoint, walletID)
+
+	p := url.Values{}
+
+	if lastExecutionID != "" {
+		p.Set("lastExecutionId", lastExecutionID)
+	}
+
+	if page != "" && perPage != "" {
+		p.Set("page", page)
+		p.Set("perPage", perPage)
+	}
+
+	if !rangeStart.IsZero() {
+		p.Set("rangeStart", rangeStart.Format(time.RFC3339))
+	}
+
+	if !rangeEnd.IsZero() {
+		p.Set("rangeEnd", rangeEnd.Format(time.RFC3339))
+	}
+
+	if len(p) > 0 {
+		URL = fmt.Sprintf("%s?%s", URL, p.Encode())
+	}
+
+	err := c.doAuthenticatedRequest(http.MethodGet, URL, nil, &funding)
+	if err != nil {
+		return funding, fmt.Errorf("could not do authenticated get funding funding reqeust: %v", err)
+	}
+
+	return funding, nil
 }

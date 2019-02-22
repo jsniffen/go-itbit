@@ -3,6 +3,7 @@ package itbit_test
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/juliansniff/go-itbit/itbit"
 )
@@ -93,4 +94,15 @@ func ExampleClient_NewWalletTransfer() {
 
 	fmt.Printf("Successfully transferred %.2f %s from %s to %s", t.Amount, t.CurrencyCode, t.SourceWalletID, t.DestinationWalletID)
 	// Output: Successfully transferred 1773.80 XBT from 7e037345-1288-4c39-12fe-d0f99a475a98 to b30cpab8-c468-9950-a771-be0db2b39dea
+}
+
+func ExampleClient_GetFundingHistory() {
+	c := itbit.NewClient("key", "secret")
+	f, err := c.GetFundingHistory("walletID", "", "", "", time.Time{}, time.Time{})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("%s\n", f.TotalNumberOfRecords)
+	// Output: 2
 }
